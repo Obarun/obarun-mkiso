@@ -4,7 +4,7 @@
 pkgname=obarun-mkiso
 pkgver=23536df
 pkgrel=1
-pkgdesc=" Script for automatic installation"
+pkgdesc=" Script for making an iso"
 arch=(x86_64)
 url="file:///var/lib/obarun/$pkgname/update_package/$pkgname"
 license=('BEERWARE')
