@@ -1,4 +1,4 @@
-# Maintainer: Obarun-install scripts <eric@obarun.org>
+# Maintainer: Obarun-mkiso scripts <eric@obarun.org>
 # DO NOT EDIT this PKGBUILD if you don't know what you do
 
 pkgname=obarun-mkiso
@@ -25,9 +25,7 @@ pkgver() {
 
 package() {
 	cd "$srcdir/$pkgname"
-	if ! [ -d /var/lib/obarun/gnupg ]; then
-		install -dm755 "$pkgdir/var/lib/obarun/gnupg"
-	fi
+
 	install -Dm 0755 "obarun-mkiso.in" "$pkgdir/usr/bin/obarun-mkiso"
 	install -Dm 0644 "mkiso_functions" "$pkgdir/usr/lib/obarun/mkiso_functions"
 	install -Dm 0644 "build_iso" "$pkgdir/usr/lib/obarun/build_iso"
