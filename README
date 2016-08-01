@@ -1,11 +1,10 @@
+Script for making an iso
 
 Assumptions:
 ============
-
-
-File description
-================
-
+	User has mounted a partitions on a correct directory
+	Network is functional
+	A valid mirror appears in /etc/pacman.d/mirrorlist
 
 License
 =======
