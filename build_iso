@@ -33,15 +33,9 @@ run_once() {
 }
 # define verbosity
 
-if [[ "$verbose" == "yes" ]];
+if [[ "$verbose" == "yes" ]]; then
 	d_verbose="-v"
 fi
-
-# Copy pacman.conf
-make_pacman_conf(){
-	echo_display " Copy $pac_conf to ${base_dir}/pacman.conf"
-	cp -f "$pac_conf" "${base_dir}"/pacman.conf
-}
 
 make_rootfs() {
 	mkdir -p ${work_dir}/airootfs
@@ -222,7 +216,6 @@ else
 	mount_umount "$newroot" "umount" &>/dev/null
 fi
 
-run_once make_pacman_conf
 run_once make_rootfs
 
 if [[ "$verbose" == "yes" ]]; then

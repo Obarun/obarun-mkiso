@@ -21,7 +21,23 @@ base_dir="${home_path}"
 work_dir="${base_dir}/work"
 arch=$(uname -m)
 pkg_list=""
+rc=""
 
+clean_install(){
+	
+	if [[ $(mount | grep "$newroot"/proc) ]]; then
+		mount_umount "$newroot" "umount"
+	fi
+	if [[ $(mount | grep "$work_dir/airootfs/proc") ]]; then
+		mount_umount "$work_dir/airootfs" "umount"
+	fi
+	if [[ $(awk -F':' '{ print $1}' /etc/passwd | grep usertmp) >/dev/null ]]; then
+		echo_valid " Removing user usertmp"
+		rem_usertmp &>/dev/null
+	fi
+
+	exit
+}
 
 define_iso_variable(){
 	local msg variable set
@@ -40,31 +56,31 @@ define_iso_variable(){
 		iso_name)
 			iso_name="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_name=.*$,iso_name=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,iso_name=.*$,iso_name=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		iso_version)
 			iso_version="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_version=.*$,iso_version=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,iso_version=.*$,iso_version=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		iso_label)
 			iso_label="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_label=.*$,iso_label=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,iso_label=.*$,iso_label=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		iso_publisher)
 			iso_publisher="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_publisher=.*$,iso_publisher=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,iso_publisher=.*$,iso_publisher=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		iso_application)
 			iso_application="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_application=.*$,iso_application=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,iso_application=.*$,iso_application=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		install_dir)
 			install_dir="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,install_dir=.*$,install_dir=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,install_dir=.*$,install_dir=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		out_dir)
 			out_dir="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,out_dir=.*$,out_dir=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,out_dir=.*$,out_dir=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		sfs_mode)
 			while [[ $set != @(img|sfs) ]]; do
 				echo_retry " sfs_mode must be img or sfs, please retry"
@@ -72,7 +88,7 @@ define_iso_variable(){
 			done
 			sfs_mode="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,sfs_mode=.*$,sfs_mode=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,sfs_mode=.*$,sfs_mode=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		sfs_comp)
 			while [[ $set != @(gzip|lzma|lzo|xz) ]]; do
 				echo_retry " sfs_comp must be gzip or lzma or lzo or xz, please retry"
@@ -80,7 +96,7 @@ define_iso_variable(){
 			done
 			sfs_comp="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,sfs_comp=.*$,sfs_comp=\"${set}\",g" /etc/obarun-mkiso/mkiso.conf;;
+			sed -i "s,sfs_comp=.*$,sfs_comp=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		verbose)
 			reply_answer
 			if (( ! "$rc" )); then
@@ -88,13 +104,13 @@ define_iso_variable(){
 				verbose="yes"
 				d_verbose="-v"
 				echo_valid " Verbose enabled"
-				sed -i "s,verbose=.*$,verbose=\"yes\",g" /etc/obarun-mkiso/mkiso.conf
+				sed -i "s,verbose=.*$,verbose=\"yes\",g" /etc/obarun/mkiso.conf
 			else
 				unset rc
 				verbose="no"
 				unset d_verbose
 				echo_notvalid " Verbose disabled"
-				sed -i "s,verbose=.*$,verbose=\"no\",g" /etc/obarun-mkiso/mkiso.conf;;
+				sed -i "s,verbose=.*$,verbose=\"no\",g" /etc/obarun/mkiso.conf
 			fi;;
 	esac
 }
@@ -154,7 +170,7 @@ choose_rootdir(){
 
 	echo_valid " Your root directory for installation is now : $_directory"
 	newroot="${_directory}"
-	sed -i "s,newroot=.*$,newroot=\"$_newroot\",g" /etc/obarun-mkiso/mkiso.conf
+	sed -i "s,newroot=.*$,newroot=\"$newroot\",g" /etc/obarun/mkiso.conf
 	
 	unset _directory
 }
@@ -188,12 +204,12 @@ while [[ "$step" !=  15 ]]; do
 	echo_info_menu "                      Expert mode"
 	echo_info_menu "**************************************************************"
 	echo_bold ""
-	echo_bold " 12 -  Enable verbose ${green}[$d_verbose]"
+	echo_bold " 12 -  Enable verbose ${green}[$verbose]"
 	echo_bold " 13 -  Clean the working directory ${green}[$work_dir]"
 	echo_bold " 14 -  Take a coffee"
 	echo_bold ""
 	echo_bold ""
-	echo_bold " ${red}15  -  Return to the main menu"
+	echo_bold " ${red}15  -  Exit from mkiso script"
 	echo_bold ""
 	echo_bold ""
 	echo_display " Enter your choice :";read  step
@@ -212,7 +228,7 @@ while [[ "$step" !=  15 ]]; do
 			11)	echo_display " Start building iso"
 				start_build
 				exit;;
-			12) define_iso_variable "option for verbosity [yes|no]" "verbose";;	
+			12) define_iso_variable "option for verbosity [y|n]" "verbose";;	
 			13) clean_work_dir;;
 			14) echo_info " Under development, not available";;
 			15)	exit;;
