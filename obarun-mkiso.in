@@ -54,7 +54,9 @@ main_update(){
 	fi
 }
 
-main_update
+if [[ "$update" == "yes" ]]; then
+	main_update
+fi
 
 main_menu
 
