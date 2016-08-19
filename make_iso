@@ -41,7 +41,7 @@ _umount_airootfs() {
     umount -d "${work_dir}/mnt/airootfs"
     echo_valid " Done!"
     rmdir "${work_dir}/mnt/airootfs"
-    trap "clean_install" EXIT ERR QUIT KILL STOP INT TERM HUP
+    trap "clean_install" ERR QUIT KILL STOP INT TERM HUP
 }
 
 # Cleanup airootfs
@@ -92,7 +92,7 @@ _mkairootfs_img () {
 	echo_info " img : $sfs_comp"
 	local _qflag=""
     if [[ ! -e "${work_dir}/airootfs" ]]; then
-        die " The path '${work_dir}/airootfs' does not exist" 
+        die " The path '${work_dir}/airootfs' does not exist" "clean_install"
     fi
 
     echo_display " Creating ext4 image of 32GiB..."
@@ -130,7 +130,7 @@ _mkairootfs_img () {
 # Makes a SquashFS filesystem from a source directory.
 _mkairootfs_sfs () {
     if [[ ! -e "${work_dir}/airootfs" ]]; then
-        die " The path '${work_dir}/airootfs' does not exist" 
+        die " The path '${work_dir}/airootfs' does not exist" "clean_install"
     fi
 
     mkdir -p "${work_dir}/iso/${install_dir}/${arch}"
@@ -174,10 +174,10 @@ command_iso () {
     local _iso_efi_boot_args="" _qflag=""
 
     if [[ ! -f "${work_dir}/iso/isolinux/isolinux.bin" ]]; then
-         die "The file '${work_dir}/iso/isolinux/isolinux.bin' does not exist."
+        die "The file '${work_dir}/iso/isolinux/isolinux.bin' does not exist." "clean_install"
     fi
     if [[ ! -f "${work_dir}/iso/isolinux/isohdpfx.bin" ]]; then
-         die " The file '${work_dir}/iso/isolinux/isohdpfx.bin' does not exist." 
+        die " The file '${work_dir}/iso/isolinux/isohdpfx.bin' does not exist." "clean_install"
     fi
 
     # If exists, add an EFI "El Torito" boot image (FAT filesystem) to ISO-9660 image.

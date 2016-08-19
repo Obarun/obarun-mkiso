@@ -50,7 +50,7 @@ make_rootfs() {
 # Needed packages for x86_64 EFI boot
 make_extra_packages() {
 	echo_display " Install needed extra-packages"
-	pacman -r "${work_dir}/airootfs" -Sy efitools intel-ucode memtest86+ mkinitcpio-nfs-utils nbd --config "$pac_conf" --cachedir "$cache_dir" --noconfirm 2>/dev/null || die " Failed to install extra-packages"
+	pacman -r "${work_dir}/airootfs" -Sy efitools intel-ucode memtest86+ mkinitcpio-nfs-utils nbd --config "$pac_conf" --cachedir "$cache_dir" --noconfirm 2>/dev/null || die " Failed to install extra-packages" "clean_install"
 }
 
 # Copy mkinitcpio archiso hooks and build initramfs (airootfs)
@@ -205,7 +205,7 @@ check_gpg "$gpg_dir"
 
 # Load modules squashfs, not really necessary....
 if ! [[ $(lsmod | grep squashfs) ]]; then
-	modprobe squashfs || die " Impossible to load squashfs module"
+	modprobe squashfs || die " Impossible to load squashfs module" "clean_install"
 fi
 
 # if newroot is already mounted, make_rootfs fail to copy on work_dir

@@ -33,7 +33,7 @@ clean_install(){
 	fi
 	if [[ $(awk -F':' '{ print $1}' /etc/passwd | grep usertmp) >/dev/null ]]; then
 		echo_valid " Removing user usertmp"
-		rem_usertmp &>/dev/null
+		user_del "usertmp" &>/dev/null
 	fi
 
 	exit
@@ -122,7 +122,7 @@ start_build(){
 	for _package in squashfs-tools libisoburn gzip; do
 		if [[ ! $(pacman -Qs $_package) >/dev/null ]]; then
 			echo_notvalid " Installing $_package"
-			pacman -S $_package --config "$pac_conf" --cachedir "$cache_dir" || die " Impossible to install the package squashfs-tools"
+			pacman -S $_package --config "$pac_conf" --cachedir "$cache_dir" || die " Impossible to install the package squashfs-tools" "clean_install"
 		else
 			echo_valid " $_package : already installed"
 		fi
@@ -135,7 +135,7 @@ start_build(){
 	if (( "$rc" )); then
 		unset rc
 		echo_retry " This is not a valid mountpoint"
-		die " You need to mount a device on $newroot or choose another directory"
+		die " You need to mount a device on $newroot or choose another directory" "clean_install"
 	fi
 	
 	${build_iso} ${verbose}
