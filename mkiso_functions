@@ -21,7 +21,7 @@ base_dir="${home_path}"
 work_dir="${base_dir}/work"
 arch=$(uname -m)
 pkg_list=""
-rc=""
+
 
 clean_install(){
 	
@@ -99,14 +99,12 @@ define_iso_variable(){
 			sed -i "s,sfs_comp=.*$,sfs_comp=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		verbose)
 			reply_answer
-			if (( ! "$rc" )); then
-				unset rc
+			if (( ! $? )); then
 				verbose="yes"
 				d_verbose="-v"
 				echo_valid " Verbose enabled"
 				sed -i "s,verbose=.*$,verbose=\"yes\",g" /etc/obarun/mkiso.conf
 			else
-				unset rc
 				verbose="no"
 				unset d_verbose
 				echo_notvalid " Verbose disabled"
@@ -132,8 +130,7 @@ start_build(){
 	
 	check_mountpoint "$newroot"
 	
-	if (( "$rc" )); then
-		unset rc
+	if (( $? )); then
 		echo_retry " This is not a valid mountpoint"
 		die " You need to mount a device on $newroot or choose another directory" "clean_install"
 	fi

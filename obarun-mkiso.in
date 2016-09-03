@@ -42,12 +42,10 @@ main_update(){
 
 	reply_answer
 
-	if (( ! "$rc" )); then
-		unset rc
+	if (( ! $? )); then
 		pac_update "obarun-mkiso" "/var/lib/obarun/obarun-mkiso" "$git_addr" || die " Impossible to update" "clean_install"
 		source /usr/lib/obarun/mkiso_functions
 	else
-		unset rc
 		echo_retry " Some functionalities will cannot working properly without updating"
 		echo_info " Press enter to continue"
 		read enter
