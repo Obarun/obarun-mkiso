@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 ## This script was made for provide obarun environment. This scripts is under license BEER-WARE.
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -9,38 +9,38 @@
 
 ##		Check is the functions file exits
 
-if [[ -f /usr/lib/obarun/common_functions ]]; then
-	source /usr/lib/obarun/common_functions
-else
-	echo "==>> Missing file : common_functions"
-	exit	
-fi
-
-if [[ -f /usr/lib/obarun/mkiso_functions ]]; then
-	source /usr/lib/obarun/mkiso_functions
-else
-	echo "==>> Missing file : mkiso_functions"
-	exit	
-fi
-
-shopt -s extglob
-
+sourcing(){
+	
+	local list
+	
+	for list in /usr/lib/obarun/{common_functions,mkiso_functions}; do
+		if [[ -f "${list}" ]]; then
+			source "${list}"
+		else
+			echo "==>> Missing file : ${list}"
+			exit	
+		fi
+	done
+	
+	unset list
+}
+sourcing
 
 export LANG=C
 
 _mount_airootfs() {
 	trap "_umount_airootfs" EXIT ERR QUIT KILL STOP INT TERM HUP
-    mkdir -p "${work_dir}/mnt/airootfs"
-    echo_display " Mounting '${work_dir}/airootfs.img' on '${work_dir}/mnt/airootfs'"
-    mount "${work_dir}/airootfs.img" "${work_dir}/mnt/airootfs"
+    mkdir -p "${WORK_DIR}/mnt/airootfs"
+    echo_display " Mounting '${WORK_DIR}/airootfs.img' on '${WORK_DIR}/mnt/airootfs'"
+    mount "${WORK_DIR}/airootfs.img" "${WORK_DIR}/mnt/airootfs"
     
 }
 
 _umount_airootfs() {
-	echo_display " Unmounting '${work_dir}/mnt/airootfs'"
-    umount -d "${work_dir}/mnt/airootfs"
+	echo_display " Unmounting '${WORK_DIR}/mnt/airootfs'"
+    umount -d "${WORK_DIR}/mnt/airootfs"
     echo_valid " Done!"
-    rmdir "${work_dir}/mnt/airootfs"
+    rmdir "${WORK_DIR}/mnt/airootfs"
     trap "clean_install" ERR QUIT KILL STOP INT TERM HUP
 }
 
@@ -49,97 +49,97 @@ _cleanup () {
     echo_display " Cleaning up what we can on airootfs..."
 
     # Delete initcpio image(s)
-    if [[ -d "${work_dir}/airootfs/boot" ]]; then
-        find "${work_dir}/airootfs/boot" -type f -name '*.img' -delete
+    if [[ -d "${WORK_DIR}/airootfs/boot" ]]; then
+        find "${WORK_DIR}/airootfs/boot" -type f -name '*.img' -delete
     fi
     # Delete kernel(s)
-    if [[ -d "${work_dir}/airootfs/boot" ]]; then
-        find "${work_dir}/airootfs/boot" -type f -name 'vmlinuz*' -delete
+    if [[ -d "${WORK_DIR}/airootfs/boot" ]]; then
+        find "${WORK_DIR}/airootfs/boot" -type f -name 'vmlinuz*' -delete
     fi
     # Delete pacman database sync cache files (*.tar.gz)
-    if [[ -d "${work_dir}/airootfs/var/lib/pacman" ]]; then
-        find "${work_dir}/airootfs/var/lib/pacman" -maxdepth 1 -type f -delete
+    if [[ -d "${WORK_DIR}/airootfs/var/lib/pacman" ]]; then
+        find "${WORK_DIR}/airootfs/var/lib/pacman" -maxdepth 1 -type f -delete
     fi
     # Delete pacman database sync cache
-    if [[ -d "${work_dir}/airootfs/var/lib/pacman/sync" ]]; then
-        find "${work_dir}/airootfs/var/lib/pacman/sync" -delete
+    if [[ -d "${WORK_DIR}/airootfs/var/lib/pacman/sync" ]]; then
+        find "${WORK_DIR}/airootfs/var/lib/pacman/sync" -delete
     fi
     # Delete pacman package cache
-    if [[ -d "${work_dir}/airootfs/var/cache/pacman/pkg" ]]; then
-        find "${work_dir}/airootfs/var/cache/pacman/pkg" -type f -delete
+    if [[ -d "${WORK_DIR}/airootfs/var/cache/pacman/pkg" ]]; then
+        find "${WORK_DIR}/airootfs/var/cache/pacman/pkg" -type f -delete
     fi
     # Delete all log files, keeps empty dirs.
-    #if [[ -d "${work_dir}/airootfs/var/log" ]]; then
-    #    find "${work_dir}/airootfs/var/log" -type f -delete
+    #if [[ -d "${WORK_DIR}/airootfs/var/log" ]]; then
+    #    find "${WORK_DIR}/airootfs/var/log" -type f -delete
     #fi
     # Delete all temporary files and dirs
-    if [[ -d "${work_dir}/airootfs/var/tmp" ]]; then
-        find "${work_dir}/airootfs/var/tmp" -mindepth 1 -delete
+    if [[ -d "${WORK_DIR}/airootfs/var/tmp" ]]; then
+        find "${WORK_DIR}/airootfs/var/tmp" -mindepth 1 -delete
     fi
-    if [[ -d "${work_dir}/airootfs/usr/share/man" ]]; then
-        find "${work_dir}/airootfs/usr/share/man" -type f -delete
+    if [[ -d "${WORK_DIR}/airootfs/usr/share/man" ]]; then
+        find "${WORK_DIR}/airootfs/usr/share/man" -type f -delete
     fi
-    if [[ -d "${work_dir}/airootfs/usr/share/doc" ]]; then
-        find "${work_dir}/airootfs/usr/share/doc" -type f -delete
+    if [[ -d "${WORK_DIR}/airootfs/usr/share/doc" ]]; then
+        find "${WORK_DIR}/airootfs/usr/share/doc" -type f -delete
     fi
     # Delete package pacman related files.
-    find "${work_dir}" \( -name "*.pacnew" -o -name "*.pacsave" -o -name "*.pacorig" \) -delete
+    find "${WORK_DIR}" \( -name "*.pacnew" -o -name "*.pacsave" -o -name "*.pacorig" \) -delete
     echo_valid "Done!"
 }
 
 # Makes a ext4 filesystem inside a SquashFS from a source directory.
 _mkairootfs_img () {
-	echo_info " img : $sfs_comp"
+	echo_info " img : $SFS_COMP"
 	local _qflag=""
-    if [[ ! -e "${work_dir}/airootfs" ]]; then
-        die " The path '${work_dir}/airootfs' does not exist" "clean_install"
+    if [[ ! -e "${WORK_DIR}/airootfs" ]]; then
+        die " The path '${WORK_DIR}/airootfs' does not exist" "clean_install"
     fi
 
     echo_display " Creating ext4 image of 32GiB..."
-    truncate -s 32G "${work_dir}/airootfs.img"
-    if [[ ${verbose} == "yes" ]]; then
+    truncate -s 32G "${WORK_DIR}/airootfs.img"
+    if [[ ${VERBOSE} == "yes" ]]; then
         _qflag="-q"
     fi
-    mkfs.ext4 ${_qflag} -O ^has_journal,^resize_inode -E lazy_itable_init=0 -m 0 -F "${work_dir}/airootfs.img"
-    tune2fs -c 0 -i 0 "${work_dir}/airootfs.img" &> /dev/null
+    mkfs.ext4 ${_qflag} -O ^has_journal,^resize_inode -E lazy_itable_init=0 -m 0 -F "${WORK_DIR}/airootfs.img"
+    tune2fs -c 0 -i 0 "${WORK_DIR}/airootfs.img" &> /dev/null
    
 	echo_valid " Done!"
     
    
     _mount_airootfs
     
-    echo_display " Copying '${work_dir}/airootfs/' to '${work_dir}/mnt/airootfs/'..."
-    cp -aT "${work_dir}/airootfs/" "${work_dir}/mnt/airootfs/"
+    echo_display " Copying '${WORK_DIR}/airootfs/' to '${WORK_DIR}/mnt/airootfs/'..."
+    cp -aT "${WORK_DIR}/airootfs/" "${WORK_DIR}/mnt/airootfs/"
     echo_valid " Done!"
     
     _umount_airootfs
     
-    mkdir -p "${work_dir}/iso/${install_dir}/${arch}"
+    mkdir -p "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
    
     echo_display " Creating SquashFS image, this may take some time..."
     
 	if [[ "${}" = "y" ]]; then
-        mksquashfs "${work_dir}/airootfs.img" "${work_dir}/iso/${install_dir}/${arch}/airootfs.sfs" -noappend -comp "${sfs_comp}" -no-progress &> /dev/null
+        mksquashfs "${WORK_DIR}/airootfs.img" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress &> /dev/null
     else
-        mksquashfs "${work_dir}/airootfs.img" "${work_dir}/iso/${install_dir}/${arch}/airootfs.sfs" -noappend -comp "${sfs_comp}" -no-progress
+        mksquashfs "${WORK_DIR}/airootfs.img" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress
     fi
     echo_valid " Done!"
-    rm ${work_dir}/airootfs.img
+    rm ${WORK_DIR}/airootfs.img
 }
 
 # Makes a SquashFS filesystem from a source directory.
 _mkairootfs_sfs () {
-    if [[ ! -e "${work_dir}/airootfs" ]]; then
-        die " The path '${work_dir}/airootfs' does not exist" "clean_install"
+    if [[ ! -e "${WORK_DIR}/airootfs" ]]; then
+        die " The path '${WORK_DIR}/airootfs' does not exist" "clean_install"
     fi
 
-    mkdir -p "${work_dir}/iso/${install_dir}/${arch}"
+    mkdir -p "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
     echo_display " Creating SquashFS image, this may take some time..."
   
-    if [[ "${verbose}" = "yes" ]]; then
-        mksquashfs "${work_dir}/airootfs" "${work_dir}/iso/${install_dir}/${arch}/airootfs.sfs" -noappend -comp "${sfs_comp}" -no-progress &> /dev/null
+    if [[ "${VERBOSE}" = "yes" ]]; then
+        mksquashfs "${WORK_DIR}/airootfs" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress &> /dev/null
     else
-		mksquashfs "${work_dir}/airootfs" "${work_dir}/iso/${install_dir}/${arch}/airootfs.sfs" -noappend -comp "${sfs_comp}" -no-progress
+		mksquashfs "${WORK_DIR}/airootfs" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress
     fi
     
     echo_valid " Done!"
@@ -147,7 +147,7 @@ _mkairootfs_sfs () {
 
 _mkchecksum () {
     echo_display " Creating checksum file for self-test..."
-    cd "${work_dir}/iso/${install_dir}/${arch}"
+    cd "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
     md5sum airootfs.sfs > airootfs.md5
     cd ${OLDPWD}
     echo_valid " Done!"
@@ -155,16 +155,16 @@ _mkchecksum () {
 
 _mksignature () {
     echo_display " Creating signature file..."
-    cd "${work_dir}/iso/${install_dir}/${arch}"
+    cd "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
     gpg --detach-sign --default-key ${gpg_key} airootfs.sfs
     cd ${OLDPWD}
     echo_valid " Done!"
 }
 
 command_pkglist () {
-    pacman -Sl -r "${work_dir}/airootfs" --config "${home_path}/pacman.conf" | \
+    pacman -Sl -r "${WORK_DIR}/airootfs" --config "${HOME_PATH}/pacman.conf" | \
         awk '/\[installed\]$/ {print $1 "/" $2 "-" $3}' > \
-        "${work_dir}/iso/${install_dir}/pkglist.${arch}.txt"
+        "${WORK_DIR}/iso/${INSTALL_DIR}/pkglist.${ARCH}.txt"
     echo_valid " Done!"
 
 }
@@ -173,50 +173,50 @@ command_pkglist () {
 command_iso () {
     local _iso_efi_boot_args="" _qflag=""
 
-    if [[ ! -f "${work_dir}/iso/isolinux/isolinux.bin" ]]; then
-        die "The file '${work_dir}/iso/isolinux/isolinux.bin' does not exist." "clean_install"
+    if [[ ! -f "${WORK_DIR}/iso/isolinux/isolinux.bin" ]]; then
+        die "The file '${WORK_DIR}/iso/isolinux/isolinux.bin' does not exist." "clean_install"
     fi
-    if [[ ! -f "${work_dir}/iso/isolinux/isohdpfx.bin" ]]; then
-        die " The file '${work_dir}/iso/isolinux/isohdpfx.bin' does not exist." "clean_install"
+    if [[ ! -f "${WORK_DIR}/iso/isolinux/isohdpfx.bin" ]]; then
+        die " The file '${WORK_DIR}/iso/isolinux/isohdpfx.bin' does not exist." "clean_install"
     fi
 
     # If exists, add an EFI "El Torito" boot image (FAT filesystem) to ISO-9660 image.
-    if [[ -f "${work_dir}/iso/EFI/archiso/efiboot.img" ]]; then
+    if [[ -f "${WORK_DIR}/iso/EFI/archiso/efiboot.img" ]]; then
         _iso_efi_boot_args="-eltorito-alt-boot
                             -e EFI/archiso/efiboot.img
                             -no-emul-boot
                             -isohybrid-gpt-basdat"
     fi
 
-    mkdir -p ${out_dir}
+    mkdir -p ${OUT_DIR}
     echo_display " Creating ISO image..."
     
-    if [[ ${verbose} == "yes" ]]; then
+    if [[ ${VERBOSE} == "yes" ]]; then
         _qflag="-quiet"
     fi
 
     xorriso -as mkisofs ${_qflag} \
         -iso-level 3 \
         -full-iso9660-filenames \
-        -volid "${iso_label}" \
-        -appid "${iso_application}" \
-        -publisher "${iso_publisher}" \
+        -volid "${ISO_LABEL}" \
+        -appid "${ISO_APPLICATION}" \
+        -publisher "${ISO_PUBLISHER}" \
         -preparer "prepared by obarun-mkiso" \
         -eltorito-boot isolinux/isolinux.bin \
         -eltorito-catalog isolinux/boot.cat \
         -no-emul-boot -boot-load-size 4 -boot-info-table \
-        -isohybrid-mbr ${work_dir}/iso/isolinux/isohdpfx.bin \
+        -isohybrid-mbr ${WORK_DIR}/iso/isolinux/isohdpfx.bin \
         ${_iso_efi_boot_args} \
-        -output "${out_dir}/${img_name}" \
-        "${work_dir}/iso/"
-    echo_valid " Done! | $(ls -sh ${out_dir}/${img_name})"
+        -output "${OUT_DIR}/${img_name}" \
+        "${WORK_DIR}/iso/"
+    echo_valid " Done! | $(ls -sh ${OUT_DIR}/${img_name})"
 }
 
 # create airootfs.sfs filesystem, and push it in "iso" directory.
 command_prepare () {
 
     _cleanup
-    if [[ ${sfs_mode} == "sfs" ]]; then
+    if [[ ${IMAGE_MODE} == "sfs" ]]; then
         _mkairootfs_sfs
     else
         _mkairootfs_img
@@ -228,15 +228,15 @@ command_prepare () {
 }
 while getopts 'p:L:P:A:D:w:o:sc' arg; do
     case "${arg}" in
-		p) pkg_list="${pkg_list} ${OPTARG}" ;;
-        L) iso_label="${OPTARG}" ;;
-        P) iso_publisher="${OPTARG}" ;;
-        A) iso_application="${OPTARG}" ;;
-        D) install_dir="${OPTARG}" ;;
-        w) work_dir="${OPTARG}" ;;
-        o) out_dir="${OPTARG}" ;;
-        s) sfs_mode="${OPTARG}" ;;
-        c) sfs_comp="${OPTARG}" ;;
+		p) PKG_LIST="${pkg_list} ${OPTARG}" ;;
+        L) ISO_LABEL="${OPTARG}" ;;
+        P) ISO_PUBLISHER="${OPTARG}" ;;
+        A) ISO_APPLICATION="${OPTARG}" ;;
+        D) INSTALL_DIR="${OPTARG}" ;;
+        w) WORK_DIR="${OPTARG}" ;;
+        o) OUT_DIR="${OPTARG}" ;;
+        s) IMAGE_MODE="${OPTARG}" ;;
+        c) SFS_COMP="${OPTARG}" ;;
     esac
 done
 

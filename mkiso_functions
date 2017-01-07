@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 ## This script is under license BEER-WARE.
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -7,34 +7,34 @@
 
 # functions file for obarun-mkiso package
 
-shopt -s extglob
-
-source /usr/lib/obarun/common_functions
-source /etc/obarun/mkiso.conf
-
 ## 		Some global variables needed
 
-home_path="/var/lib/obarun/obarun-mkiso"
-make_iso="/usr/lib/obarun/make_iso"
-build_iso="/usr/lib/obarun/build_iso"
-base_dir="${home_path}"
-work_dir="${base_dir}/work"
-arch=$(uname -m)
-pkg_list=""
+HOME_PATH="/var/lib/obarun/obarun-mkiso"
+MAKE_ISO="/usr/lib/obarun/make_iso"
+BUILD_ISO="/usr/lib/obarun/build_iso"
+WORK_DIR="${HOME_PATH}/work"
+ARCH=$(uname -m)
+PKG_LIST=""
 
 
 clean_install(){
 	
-	if [[ $(mount | grep "$newroot"/proc) ]]; then
-		mount_umount "$newroot" "umount"
+	echo_display " Cleaning up"
+	if [[ $(mount | grep "$NEWROOT"/proc) ]]; then
+		echo_valid " Umount $NEWROOT"
+		mount_umount "$NEWROOT" "umount"
 	fi
-	if [[ $(mount | grep "$work_dir/airootfs/proc") ]]; then
-		mount_umount "$work_dir/airootfs" "umount"
+	if [[ $(mount | grep "$WORK_DIR/airootfs/proc") ]]; then
+		echo_valid " Umount $WORK_DIR/airootfs"
+		mount_umount "$WORK_DIR/airootfs" "umount"
 	fi
 	if [[ $(awk -F':' '{ print $1}' /etc/passwd | grep usertmp) >/dev/null ]]; then
 		echo_valid " Removing user usertmp"
 		user_del "usertmp" &>/dev/null
 	fi
+	
+	echo_valid " Restore your shell options"
+	shellopts_restore
 
 	exit
 }
@@ -53,62 +53,62 @@ define_iso_variable(){
 	done
 	
 	case $variable in
-		iso_name)
-			iso_name="${set}"
+		ISO_NAME)
+			ISO_NAME="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_name=.*$,iso_name=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		iso_version)
-			iso_version="${set}"
+			sed -i "s,ISO_NAME=.*$,ISO_NAME=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		ISO_VERSION)
+			ISO_VERSION="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_version=.*$,iso_version=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		iso_label)
-			iso_label="${set}"
+			sed -i "s,ISO_VERSION=.*$,ISO_VERSION=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		ISO_LABEL)
+			ISO_LABEL="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_label=.*$,iso_label=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		iso_publisher)
-			iso_publisher="${set}"
+			sed -i "s,ISO_LABEL=.*$,ISO_LABEL=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		ISO_PUBLISHER)
+			ISO_PUBLISHER="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_publisher=.*$,iso_publisher=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		iso_application)
-			iso_application="${set}"
+			sed -i "s,ISO_PUBLISHER=.*$,ISO_PUBLISHER=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		ISO_APPLICATION)
+			ISO_APPLICATION="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,iso_application=.*$,iso_application=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		install_dir)
-			install_dir="${set}"
+			sed -i "s,ISO_APPLICATION=.*$,ISO_APPLICATION=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		INSTALL_DIR)
+			INSTALL_DIR="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,install_dir=.*$,install_dir=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		out_dir)
-			out_dir="${set}"
+			sed -i "s,INSTALL_DIR=.*$,INSTALL_DIR=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		OUT_DIR)
+			OUT_DIR="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,out_dir=.*$,out_dir=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		sfs_mode)
+			sed -i "s,OUT_DIR=.*$,OUT_DIR=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		IMAGE_MODE)
 			while [[ $set != @(img|sfs) ]]; do
 				echo_retry " sfs_mode must be img or sfs, please retry"
 				read set
 			done
-			sfs_mode="${set}"
+			IMAGE_MODE="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,sfs_mode=.*$,sfs_mode=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		sfs_comp)
+			sed -i "s,IMAGE_MODE=.*$,IMAGE_MODE=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		SFS_COMP)
 			while [[ $set != @(gzip|lzma|lzo|xz) ]]; do
 				echo_retry " sfs_comp must be gzip or lzma or lzo or xz, please retry"
 				read set
 			done
-			sfs_comp="${set}"
+			SFS_COMP="${set}"
 			echo_valid " ${msg} is now : $set"
-			sed -i "s,sfs_comp=.*$,sfs_comp=\"${set}\",g" /etc/obarun/mkiso.conf;;
-		verbose)
+			sed -i "s,SFS_COMP=.*$,SFS_COMP=\"${set}\",g" /etc/obarun/mkiso.conf;;
+		VERBOSE)
 			reply_answer
 			if (( ! $? )); then
-				verbose="yes"
+				VERBOSE="yes"
 				d_verbose="-v"
 				echo_valid " Verbose enabled"
-				sed -i "s,verbose=.*$,verbose=\"yes\",g" /etc/obarun/mkiso.conf
+				sed -i "s,VERBOSE=.*$,VERBOSE=\"yes\",g" /etc/obarun/mkiso.conf
 			else
-				verbose="no"
+				VERBOSE="no"
 				unset d_verbose
 				echo_notvalid " Verbose disabled"
-				sed -i "s,verbose=.*$,verbose=\"no\",g" /etc/obarun/mkiso.conf
+				sed -i "s,VERBOSE=.*$,VERBOSE=\"no\",g" /etc/obarun/mkiso.conf
 			fi;;
 	esac
 }
@@ -120,7 +120,7 @@ start_build(){
 	for _package in squashfs-tools libisoburn gzip; do
 		if [[ ! $(pacman -Qs $_package) >/dev/null ]]; then
 			echo_notvalid " Installing $_package"
-			pacman -S $_package --config "$pac_conf" --cachedir "$cache_dir" || die " Impossible to install the package squashfs-tools" "clean_install"
+			pacman -S $_package --config "$PAC_CONF" --cachedir "$CACHE_DIR" || die " Impossible to install the package squashfs-tools" "clean_install"
 		else
 			echo_valid " $_package : already installed"
 		fi
@@ -128,22 +128,22 @@ start_build(){
 	
 	unset _package	
 	
-	check_mountpoint "$newroot"
+	check_mountpoint "$NEWROOT"
 	
 	if (( $? )); then
 		echo_retry " This is not a valid mountpoint"
-		die " You need to mount a device on $newroot or choose another directory" "clean_install"
+		die " You need to mount a device on $NEWROOT or choose another directory" "clean_install"
 	fi
 	
-	${build_iso} ${verbose}
+	${BUILD_ISO} ${VERBOSE}
 }
 
 clean_work_dir(){
-	if [[ -d $work_dir ]]; then
-		echo_display " Removing $work_dir"
-		rm -R "$work_dir"
+	if [[ -d $WORK_DIR ]]; then
+		echo_display " Removing $WORK_DIR"
+		rm -R "$WORK_DIR"
 	else
-		echo_display " $work_dir doesn't exist"
+		echo_display " $WORK_DIR doesn't exist"
 	fi
 }
 
@@ -166,8 +166,8 @@ choose_rootdir(){
 	done
 
 	echo_valid " Your root directory for installation is now : $_directory"
-	newroot="${_directory}"
-	sed -i "s,newroot=.*$,newroot=\"$newroot\",g" /etc/obarun/mkiso.conf
+	NEWROOT="${_directory}"
+	sed -i "s,NEWROOT=.*$,NEWROOT=\"$NEWROOT\",g" /etc/obarun/mkiso.conf
 	
 	unset _directory
 }
@@ -184,16 +184,16 @@ while [[ "$step" !=  15 ]]; do
 	echo_info_menu "                       Iso menu"
 	echo_info_menu "**************************************************************"
 	echo_bold ""
-	echo_bold " 1  -  Choose directory to copy on iso ${green}[$newroot]"
-	echo_bold " 2  -  Set iso name ${green}[$iso_name]"
-	echo_bold " 3  -  Set iso version ${green}[$iso_version]"
-	echo_bold " 4  -  Set iso label ${green}[$iso_label]"
-	echo_bold " 5  -  Set iso publisher ${green}[$iso_publisher]"
-	echo_bold " 6  -  Set application name for the iso ${green}[$iso_application]"
-	echo_bold " 7  -  Set installation directory inside iso ${green}[$install_dir]"
-	echo_bold " 8  -  Set directory where the iso is saved ${green}[$out_dir]"
-	echo_bold " 9  -  Set SquashFS image mode (img or sfs) ${green}[$sfs_mode]"
-	echo_bold " 10 -  Set SquashFS compression type (gzip, lzma, lzo, xz) ${green}[$sfs_comp]"
+	echo_bold " 1  -  Choose directory to copy on iso ${green}[$NEWROOT]"
+	echo_bold " 2  -  Set iso name ${green}[$ISO_NAME]"
+	echo_bold " 3  -  Set iso version ${green}[$ISO_VERSION]"
+	echo_bold " 4  -  Set iso label ${green}[$ISO_LABEL]"
+	echo_bold " 5  -  Set iso publisher ${green}[$ISO_PUBLISHER]"
+	echo_bold " 6  -  Set application name for the iso ${green}[$ISO_APPLICATION]"
+	echo_bold " 7  -  Set installation directory inside iso ${green}[$INSTALL_DIR]"
+	echo_bold " 8  -  Set directory where the iso is saved ${green}[$OUT_DIR]"
+	echo_bold " 9  -  Set SquashFS image mode (img or sfs) ${green}[$IMAGE_MODE]"
+	echo_bold " 10 -  Set SquashFS compression type (gzip, lzma, lzo, xz) ${green}[$SFS_COMP]"
 	echo_bold ""
 	echo_bold " 11 -  Start building"
 	echo_bold ""
@@ -201,8 +201,8 @@ while [[ "$step" !=  15 ]]; do
 	echo_info_menu "                      Expert mode"
 	echo_info_menu "**************************************************************"
 	echo_bold ""
-	echo_bold " 12 -  Enable verbose ${green}[$verbose]"
-	echo_bold " 13 -  Clean the working directory ${green}[$work_dir]"
+	echo_bold " 12 -  Enable verbose ${green}[$VERBOSE]"
+	echo_bold " 13 -  Clean the working directory ${green}[$WORK_DIR]"
 	echo_bold " 14 -  Take a coffee"
 	echo_bold ""
 	echo_bold ""
@@ -213,19 +213,19 @@ while [[ "$step" !=  15 ]]; do
 
 		case "$step" in 
 			1)	choose_rootdir;;
-			2)	define_iso_variable "iso name" "iso_name";; 
-			3)	define_iso_variable "iso version" "iso_version";; 
-			4)	define_iso_variable "iso label" "iso_label";; 
-			5)	define_iso_variable "iso publisher" "iso_publisher";; 
-			6)	define_iso_variable "application name" "iso_application";;
-			7)	define_iso_variable "installation directory" "install_dir";; 
-			8)	define_iso_variable "output directory" "out_dir";; 
-			9)	define_iso_variable "image mode [img|sfs]" "sfs_mode";; 
-			10)	define_iso_variable "compression type [gzip|lzma|lzo|xz]" "sfs_comp";; 
+			2)	define_iso_variable "iso name" "ISO_NAME";; 
+			3)	define_iso_variable "iso version" "ISO_VERSION";; 
+			4)	define_iso_variable "iso label" "ISO_LABEL";; 
+			5)	define_iso_variable "iso publisher" "ISO_PUBLISHER";; 
+			6)	define_iso_variable "application name" "ISO_APPLICATION";;
+			7)	define_iso_variable "installation directory" "INSTALL_DIR";; 
+			8)	define_iso_variable "output directory" "OUT_DIR";; 
+			9)	define_iso_variable "image mode [img|sfs]" "IMAGE_MODE";; 
+			10)	define_iso_variable "compression type [gzip|lzma|lzo|xz]" "SFS_COMP";; 
 			11)	echo_display " Start building iso"
 				start_build
 				exit;;
-			12) define_iso_variable "option for verbosity [y|n]" "verbose";;	
+			12) define_iso_variable "option for verbosity [y|n]" "VERBOSE";;	
 			13) clean_work_dir;;
 			14) echo_info " Under development, not available";;
 			15)	exit;;
