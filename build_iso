@@ -13,7 +13,7 @@ sourcing(){
 	
 	local list
 	
-	for list in /usr/lib/obarun/{common_functions,mkiso_functions}; do
+	for list in /usr/lib/obarun/{common_functions,mkiso_functions} /etc/obarun/mkiso.conf; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
@@ -24,7 +24,7 @@ sourcing(){
 	
 	unset list
 }
-#sourcing
+sourcing
 
 run_once() {
     if [[ ! -e ${WORK_DIR}/build.${1} ]]; then

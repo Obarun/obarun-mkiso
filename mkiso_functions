@@ -166,8 +166,8 @@ choose_rootdir(){
 	done
 
 	echo_valid " Your root directory for installation is now : $_directory"
-	NEWROOT="${_directory}"
-	sed -i "s,NEWROOT=.*$,NEWROOT=\"$NEWROOT\",g" /etc/obarun/mkiso.conf
+	#NEWROOT="${_directory}"
+	sed -i "s,NEWROOT=.*$,NEWROOT=\"${_directory}\",g" /etc/obarun/mkiso.conf
 	
 	unset _directory
 }
