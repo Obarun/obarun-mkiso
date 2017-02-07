@@ -147,9 +147,9 @@ make_efi() {
 make_prepare() {
 	echo_display " Creating a list of installed packages on live-enviroment..."
     cp -a -l -f ${WORK_DIR}/airootfs ${WORK_DIR}
-    ${MAKE_ISO} -w "${WORK_DIR}" -D "${INSTALL_DIR}" pkglist
+    ${MAKE_ISO} pkglist
     echo_display " Prepare and compress airootfs"
-    ${MAKE_ISO} -w "${WORK_DIR}" -D "${INSTALL_DIR}" prepare #${gpg_key:+-g ${gpg_key}}
+    ${MAKE_ISO} prepare #${gpg_key:+-g ${gpg_key}}
     #rm -rf ${WORK_DIR}/airootfs
     # rm -rf ${WORK_DIR}/${ARCH}/airootfs (if low space, this helps)
 }
@@ -193,7 +193,7 @@ make_efiboot() {
 # Build ISO
 make_iso() {
 	echo_display " Build the iso"
-    ${MAKE_ISO} -w "${WORK_DIR}" -D "${INSTALL_DIR}" -L "${ISO_LABEL}" -o "${OUT_DIR}" iso "${ISO_NAME}_x86_64-${ISO_VERSION}.iso"
+    ${MAKE_ISO} iso "${ISO_NAME}_x86_64-${ISO_VERSION}.iso"
 }
 
 if ! [[ -d ${WORK_DIR} ]]; then

@@ -226,21 +226,6 @@ command_prepare () {
     #  _mksignature
     #fi
 }
-while getopts 'p:L:P:A:D:w:o:sc' arg; do
-    case "${arg}" in
-		p) PKG_LIST="${pkg_list} ${OPTARG}" ;;
-        L) ISO_LABEL="${OPTARG}" ;;
-        P) ISO_PUBLISHER="${OPTARG}" ;;
-        A) ISO_APPLICATION="${OPTARG}" ;;
-        D) INSTALL_DIR="${OPTARG}" ;;
-        w) WORK_DIR="${OPTARG}" ;;
-        o) OUT_DIR="${OPTARG}" ;;
-        s) IMAGE_MODE="${OPTARG}" ;;
-        c) SFS_COMP="${OPTARG}" ;;
-    esac
-done
-
-shift $((OPTIND - 1))
 
 command_name="${1}"
 
