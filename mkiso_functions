@@ -101,12 +101,10 @@ define_iso_variable(){
 			reply_answer
 			if (( ! $? )); then
 				VERBOSE="yes"
-				d_verbose="-v"
 				echo_valid " Verbose enabled"
 				sed -i "s,VERBOSE=.*$,VERBOSE=\"yes\",g" /etc/obarun/mkiso.conf
 			else
 				VERBOSE="no"
-				unset d_verbose
 				echo_notvalid " Verbose disabled"
 				sed -i "s,VERBOSE=.*$,VERBOSE=\"no\",g" /etc/obarun/mkiso.conf
 			fi;;
@@ -114,20 +112,7 @@ define_iso_variable(){
 }
 
 start_build(){
-	local _package
-	echo_display " Check packages needed for the script"
-	
-	for _package in squashfs-tools libisoburn gzip; do
-		if [[ ! $(pacman -Qs $_package) >/dev/null ]]; then
-			echo_notvalid " Installing $_package"
-			pacman -S $_package --config "$PAC_CONF" --cachedir "$CACHE_DIR" || die " Impossible to install the package squashfs-tools" "clean_install"
-		else
-			echo_valid " $_package : already installed"
-		fi
-	done
-	
-	unset _package	
-	
+		
 	check_mountpoint "$NEWROOT"
 	
 	if (( $? )); then
@@ -135,7 +120,7 @@ start_build(){
 		die " You need to mount a device on $NEWROOT or choose another directory" "clean_install"
 	fi
 	
-	${BUILD_ISO} ${VERBOSE}
+	${BUILD_ISO}
 }
 
 clean_work_dir(){
@@ -177,6 +162,7 @@ main_menu(){
 	local step=100
 
 while [[ "$step" !=  15 ]]; do
+	source /etc/obarun/mkiso.conf
 	clear
 	echo_bold ""
 	echo_bold ""
