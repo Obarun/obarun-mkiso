@@ -10,7 +10,7 @@ sourcing(){
 	
 	local list
 	
-	for list in /usr/lib/obarun/{common_functions,mkiso_functions} /etc/obarun/mkiso.conf; do
+	for list in etc/obarun/mkiso.conf /usr/lib/obarun/{common_functions,mkiso_functions}; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
@@ -45,7 +45,7 @@ main_update(){
 
 	if (( ! $? )); then
 		pac_update "obarun-mkiso" "/var/lib/obarun/obarun-mkiso" "$GIT_ADDR" || die " Impossible to update" "clean_install"
-		source /usr/lib/obarun/mkiso_functions
+		sourcing
 	else
 		echo_retry " Some functionalities will cannot working properly without updating"
 		echo_info " Press enter to continue"
