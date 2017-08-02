@@ -1,4 +1,10 @@
 #!/usr/bin/bash
+#
+# Authors:
+# Eric Vidal <eric@obarun.org>
+#
+# Copyright (C) 2015-2017 Eric Vidal <eric@obarun.org>
+#
 # This script is under license BEER-WARE
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -10,11 +16,11 @@ sourcing(){
 	
 	local list
 	
-	for list in etc/obarun/mkiso.conf /usr/lib/obarun/{common_functions,mkiso_functions}; do
+	for list in etc/obarun/mkiso.conf /usr/lib/obarun/{util.sh,mkiso.sh}; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
-			echo_error " Missing file : ${list}"
+			out_error "Missing file : ${list}"
 			exit	
 		fi
 	done
@@ -39,7 +45,7 @@ trap "clean_install" ERR QUIT KILL STOP INT TERM
 ##		Update package or not
 
 main_update(){
-	echo_display " Do you want to update obarun-mkiso package? [y|n]"
+	out_action "Do you want to update obarun-mkiso package? [y|n]"
 
 	reply_answer
 
@@ -47,8 +53,8 @@ main_update(){
 		pac_update "obarun-mkiso" "/var/lib/obarun/obarun-mkiso" "$GIT_ADDR" || die " Impossible to update" "clean_install"
 		sourcing
 	else
-		echo_retry " Some functionalities will cannot working properly without updating"
-		echo_info " Press enter to continue"
+		out_notvalid "Some functionalities will cannot working properly without updating"
+		out_info "Press enter to continue"
 		read enter
 	fi
 }
