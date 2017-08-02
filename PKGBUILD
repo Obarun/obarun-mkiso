@@ -27,7 +27,7 @@ package() {
 	cd "$srcdir/$pkgname"
 
 	install -Dm 0755 "obarun-mkiso.in" "$pkgdir/usr/bin/obarun-mkiso"
-	install -Dm 0644 "mkiso.sh" "$pkgdir/usr/lib/obarun/mkiso.sh"
+	install -Dm 0755 "mkiso.sh" "$pkgdir/usr/lib/obarun/mkiso.sh"
 	install -dm 0755 "$pkgdir/usr/lib/obarun/mkiso/"
 	install -Dm 0755 "build/build.sh" "$pkgdir/usr/lib/obarun/mkiso/build.sh"
 	install -Dm 0755 "build/make.sh" "$pkgdir/usr/lib/obarun/mkiso/make.sh"
