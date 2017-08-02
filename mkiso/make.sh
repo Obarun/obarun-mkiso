@@ -19,7 +19,7 @@ sourcing(){
 	
 	local list
 	
-	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{util.sh,mkiso_functions}; do
+	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{util.sh,mkiso.sh}; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
