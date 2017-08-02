@@ -1,4 +1,10 @@
 #!/usr/bin/bash
+#
+# Authors:
+# Eric Vidal <eric@obarun.org>
+#
+# Copyright (C) 2015-2017 Eric Vidal <eric@obarun.org>
+#
 ## This script is under license BEER-WARE.
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -19,21 +25,21 @@ PKG_LIST=""
 
 clean_install(){
 	
-	echo_display " Cleaning up"
+	out_action "Cleaning up"
 	if [[ $(mount | grep "$NEWROOT"/proc) ]]; then
-		echo_valid " Umount $NEWROOT"
+		out_valid "Umount $NEWROOT"
 		mount_umount "$NEWROOT" "umount"
 	fi
 	if [[ $(mount | grep "$WORK_DIR/airootfs/proc") ]]; then
-		echo_valid " Umount $WORK_DIR/airootfs"
+		out_valid "Umount $WORK_DIR/airootfs"
 		mount_umount "$WORK_DIR/airootfs" "umount"
 	fi
 	if [[ $(awk -F':' '{ print $1}' /etc/passwd | grep usertmp) >/dev/null ]]; then
-		echo_valid " Removing user usertmp"
+		out_valid "Removing user usertmp"
 		user_del "usertmp" &>/dev/null
 	fi
 	
-	echo_valid " Restore your shell options"
+	out_valid "Restore your shell options"
 	shellopts_restore
 
 	exit
@@ -44,68 +50,68 @@ define_iso_variable(){
 	msg="$1"
 	variable="$2"
 	
-	echo_display " Enter the $msg"
+	out_action "Enter the $msg"
 	read -e set
 	
 	while [[ -z $set ]]; do
-		echo_retry " Empty value, please retry"
+		out_notvalid "Empty value, please retry"
 		read set
 	done
 	
 	case $variable in
 		ISO_NAME)
 			ISO_NAME="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,ISO_NAME=.*$,ISO_NAME=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		ISO_VERSION)
 			ISO_VERSION="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,ISO_VERSION=.*$,ISO_VERSION=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		ISO_LABEL)
 			ISO_LABEL="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,ISO_LABEL=.*$,ISO_LABEL=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		ISO_PUBLISHER)
 			ISO_PUBLISHER="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,ISO_PUBLISHER=.*$,ISO_PUBLISHER=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		ISO_APPLICATION)
 			ISO_APPLICATION="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,ISO_APPLICATION=.*$,ISO_APPLICATION=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		INSTALL_DIR)
 			INSTALL_DIR="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,INSTALL_DIR=.*$,INSTALL_DIR=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		OUT_DIR)
 			OUT_DIR="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,OUT_DIR=.*$,OUT_DIR=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		IMAGE_MODE)
 			while [[ $set != @(img|sfs) ]]; do
-				echo_retry " sfs_mode must be img or sfs, please retry"
+				out_notvalid "sfs_mode must be img or sfs, please retry"
 				read set
 			done
 			IMAGE_MODE="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,IMAGE_MODE=.*$,IMAGE_MODE=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		SFS_COMP)
 			while [[ $set != @(gzip|lzma|lzo|xz) ]]; do
-				echo_retry " sfs_comp must be gzip or lzma or lzo or xz, please retry"
+				out_notvalid "sfs_comp must be gzip or lzma or lzo or xz, please retry"
 				read set
 			done
 			SFS_COMP="${set}"
-			echo_valid " ${msg} is now : $set"
+			out_valid "${msg} is now : $set"
 			sed -i "s,SFS_COMP=.*$,SFS_COMP=\"${set}\",g" /etc/obarun/mkiso.conf;;
 		VERBOSE)
 			reply_answer
 			if (( ! $? )); then
 				VERBOSE="yes"
-				echo_valid " Verbose enabled"
+				out_valid "Verbose enabled"
 				sed -i "s,VERBOSE=.*$,VERBOSE=\"yes\",g" /etc/obarun/mkiso.conf
 			else
 				VERBOSE="no"
-				echo_notvalid " Verbose disabled"
+				out_notvalid "Verbose disabled"
 				sed -i "s,VERBOSE=.*$,VERBOSE=\"no\",g" /etc/obarun/mkiso.conf
 			fi;;
 	esac
@@ -116,7 +122,7 @@ start_build(){
 	check_mountpoint "$NEWROOT"
 	
 	if (( $? )); then
-		echo_retry " This is not a valid mountpoint"
+		out_notvalid "This is not a valid mountpoint"
 		die " You need to mount a device on $NEWROOT or choose another directory" "clean_install"
 	fi
 	
@@ -125,10 +131,10 @@ start_build(){
 
 clean_work_dir(){
 	if [[ -d $WORK_DIR ]]; then
-		echo_display " Removing $WORK_DIR"
+		out_action "Removing $WORK_DIR"
 		rm -R "$WORK_DIR"
 	else
-		echo_display " $WORK_DIR doesn't exist"
+		out_action "$WORK_DIR doesn't exist"
 	fi
 }
 
@@ -137,20 +143,20 @@ clean_work_dir(){
 choose_rootdir(){	
 	local _directory
 		
-	echo_display " Enter your root directory :"
+	out_action "Enter your root directory :"
 	read -e _directory
 		
 	until [[ -d "$_directory" ]]; do
-		echo_retry " This is not a directory, please retry :"
+		out_notvalid "This is not a directory, please retry :"
 		read -e _directory
 	done
 	
 	while ! mountpoint -q "$_directory"; do
-		echo_retry " This is not a valide mountpoint, please retry :"
+		out_notvalid "This is not a valide mountpoint, please retry :"
 		read -e _directory
 	done
 
-	echo_valid " Your root directory for installation is now : $_directory"
+	out_valid "Your root directory for installation is now : $_directory"
 	#NEWROOT="${_directory}"
 	sed -i "s,NEWROOT=.*$,NEWROOT=\"${_directory}\",g" /etc/obarun/mkiso.conf
 	
@@ -164,38 +170,38 @@ main_menu(){
 while [[ "$step" !=  15 ]]; do
 	source /etc/obarun/mkiso.conf
 	clear
-	echo_bold ""
-	echo_bold ""
-	echo_info_menu "**************************************************************"
-	echo_info_menu "                       Iso menu"
-	echo_info_menu "**************************************************************"
-	echo_bold ""
-	echo_bold " 1  -  Choose directory to copy on iso ${green}[$NEWROOT]"
-	echo_bold " 2  -  Set iso name ${green}[$ISO_NAME]"
-	echo_bold " 3  -  Set iso version ${green}[$ISO_VERSION]"
-	echo_bold " 4  -  Set iso label ${green}[$ISO_LABEL]"
-	echo_bold " 5  -  Set iso publisher ${green}[$ISO_PUBLISHER]"
-	echo_bold " 6  -  Set application name for the iso ${green}[$ISO_APPLICATION]"
-	echo_bold " 7  -  Set installation directory inside iso ${green}[$INSTALL_DIR]"
-	echo_bold " 8  -  Set directory where the iso is saved ${green}[$OUT_DIR]"
-	echo_bold " 9  -  Set SquashFS image mode (img or sfs) ${green}[$IMAGE_MODE]"
-	echo_bold " 10 -  Set SquashFS compression type (gzip, lzma, lzo, xz) ${green}[$SFS_COMP]"
-	echo_bold ""
-	echo_bold " 11 -  Start building"
-	echo_bold ""
-	echo_info_menu "**************************************************************"
-	echo_info_menu "                      Expert mode"
-	echo_info_menu "**************************************************************"
-	echo_bold ""
-	echo_bold " 12 -  Enable verbose ${green}[$VERBOSE]"
-	echo_bold " 13 -  Clean the working directory ${green}[$WORK_DIR]"
-	echo_bold " 14 -  Take a coffee"
-	echo_bold ""
-	echo_bold ""
-	echo_bold " ${red}15  -  Exit from mkiso script"
-	echo_bold ""
-	echo_bold ""
-	echo_display " Enter your choice :";read  step
+	out_void
+	out_void
+	out_menu_title "**************************************************************"
+	out_menu_title "                       Iso menu"
+	out_menu_title "**************************************************************"
+	out_void
+	out_menu_list " 1  -  Choose directory to copy on iso ${green}[$NEWROOT]"
+	out_menu_list " 2  -  Set iso name ${green}[$ISO_NAME]"
+	out_menu_list " 3  -  Set iso version ${green}[$ISO_VERSION]"
+	out_menu_list " 4  -  Set iso label ${green}[$ISO_LABEL]"
+	out_menu_list " 5  -  Set iso publisher ${green}[$ISO_PUBLISHER]"
+	out_menu_list " 6  -  Set application name for the iso ${green}[$ISO_APPLICATION]"
+	out_menu_list " 7  -  Set installation directory inside iso ${green}[$INSTALL_DIR]"
+	out_menu_list " 8  -  Set directory where the iso is saved ${green}[$OUT_DIR]"
+	out_menu_list " 9  -  Set SquashFS image mode (img or sfs) ${green}[$IMAGE_MODE]"
+	out_menu_list " 10 -  Set SquashFS compression type (gzip, lzma, lzo, xz) ${green}[$SFS_COMP]"
+	out_void
+	out_menu_list " 11 -  Start building"
+	out_void
+	out_menu_title "**************************************************************"
+	out_menu_title "                      Expert mode"
+	out_menu_title "**************************************************************"
+	out_void
+	out_menu_list " 12 -  Enable verbose ${green}[$VERBOSE]"
+	out_menu_list " 13 -  Clean the working directory ${green}[$WORK_DIR]"
+	out_menu_list " 14 -  Take a coffee"
+	out_void
+	out_void
+	out_menu_list " ${red}15  -  Exit from mkiso script"
+	out_void
+	out_void
+	out_menu_list " Enter your choice :";read  step
 
 		case "$step" in 
 			1)	choose_rootdir;;
@@ -208,16 +214,16 @@ while [[ "$step" !=  15 ]]; do
 			8)	define_iso_variable "output directory" "OUT_DIR";; 
 			9)	define_iso_variable "image mode [img|sfs]" "IMAGE_MODE";; 
 			10)	define_iso_variable "compression type [gzip|lzma|lzo|xz]" "SFS_COMP";; 
-			11)	echo_display " Start building iso"
+			11)	out_action "Start building iso"
 				start_build
 				exit;;
 			12) define_iso_variable "option for verbosity [y|n]" "VERBOSE";;	
 			13) clean_work_dir;;
-			14) echo_info " Under development, not available";;
+			14) out_info "Under development, not available";;
 			15)	exit;;
-			*) echo_retry " Invalid number, please retry:"
+			*) out_notvalid "Invalid number, please retry:"
 		esac
-		echo_info " Press enter to return to the iso menu"
+		out_info "Press enter to return to the iso menu"
 		read enter 
 done
 }
