@@ -1,4 +1,10 @@
 #!/usr/bin/bash
+#
+# Authors:
+# Eric Vidal <eric@obarun.org>
+#
+# Copyright (C) 2015-2017 Eric Vidal <eric@obarun.org>
+#
 ## This script was made for provide obarun environment. This scripts is under license BEER-WARE.
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -13,11 +19,11 @@ sourcing(){
 	
 	local list
 	
-	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{common_functions,mkiso_functions}; do
+	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{util.sh,mkiso_functions}; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
-			echo "==>> Missing file : ${list}"
+			out_error "Missing file : ${list}"
 			exit	
 		fi
 	done
@@ -31,22 +37,22 @@ export LANG=C
 _mount_airootfs() {
 	trap "_umount_airootfs" EXIT ERR QUIT KILL STOP INT TERM HUP
     mkdir -p "${WORK_DIR}/mnt/airootfs"
-    echo_display " Mounting '${WORK_DIR}/airootfs.img' on '${WORK_DIR}/mnt/airootfs'"
+    out_action "Mounting '${WORK_DIR}/airootfs.img' on '${WORK_DIR}/mnt/airootfs'"
     mount "${WORK_DIR}/airootfs.img" "${WORK_DIR}/mnt/airootfs"
     
 }
 
 _umount_airootfs() {
-	echo_display " Unmounting '${WORK_DIR}/mnt/airootfs'"
+	out_action "Unmounting '${WORK_DIR}/mnt/airootfs'"
     umount -d "${WORK_DIR}/mnt/airootfs"
-    echo_valid " Done!"
+    out_valid "Done!"
     rmdir "${WORK_DIR}/mnt/airootfs"
     trap "clean_install" ERR QUIT KILL STOP INT TERM HUP
 }
 
 # Cleanup airootfs
 _cleanup () {
-    echo_display " Cleaning up what we can on airootfs..."
+    out_action "Cleaning up what we can on airootfs..."
 
     # Delete initcpio image(s)
     if [[ -d "${WORK_DIR}/airootfs/boot" ]]; then
@@ -84,18 +90,18 @@ _cleanup () {
     fi
     # Delete package pacman related files.
     find "${WORK_DIR}" \( -name "*.pacnew" -o -name "*.pacsave" -o -name "*.pacorig" \) -delete
-    echo_valid "Done!"
+    out_valid "Done!"
 }
 
 # Makes a ext4 filesystem inside a SquashFS from a source directory.
 _mkairootfs_img () {
-	echo_info " img : $SFS_COMP"
+	out_info "img : $SFS_COMP"
 	local _qflag=""
     if [[ ! -e "${WORK_DIR}/airootfs" ]]; then
         die " The path '${WORK_DIR}/airootfs' does not exist" "clean_install"
     fi
 
-    echo_display " Creating ext4 image of 32GiB..."
+    out_action "Creating ext4 image of 32GiB..."
     truncate -s 32G "${WORK_DIR}/airootfs.img"
     if [[ ${VERBOSE} == "yes" ]]; then
         _qflag="-q"
@@ -103,27 +109,27 @@ _mkairootfs_img () {
     mkfs.ext4 ${_qflag} -O ^has_journal,^resize_inode -E lazy_itable_init=0 -m 0 -F "${WORK_DIR}/airootfs.img"
     tune2fs -c 0 -i 0 "${WORK_DIR}/airootfs.img" &> /dev/null
    
-	echo_valid " Done!"
+	out_valid "Done!"
     
    
     _mount_airootfs
     
-    echo_display " Copying '${WORK_DIR}/airootfs/' to '${WORK_DIR}/mnt/airootfs/'..."
+    out_action "Copying '${WORK_DIR}/airootfs/' to '${WORK_DIR}/mnt/airootfs/'..."
     cp -aT "${WORK_DIR}/airootfs/" "${WORK_DIR}/mnt/airootfs/"
-    echo_valid " Done!"
+    out_valid "Done!"
     
     _umount_airootfs
     
     mkdir -p "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
    
-    echo_display " Creating SquashFS image, this may take some time..."
+    out_action "Creating SquashFS image, this may take some time..."
     
 	if [[ "${}" = "y" ]]; then
         mksquashfs "${WORK_DIR}/airootfs.img" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress &> /dev/null
     else
         mksquashfs "${WORK_DIR}/airootfs.img" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress
     fi
-    echo_valid " Done!"
+    out_valid "Done!"
     rm ${WORK_DIR}/airootfs.img
 }
 
@@ -134,7 +140,7 @@ _mkairootfs_sfs () {
     fi
 
     mkdir -p "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
-    echo_display " Creating SquashFS image, this may take some time..."
+    out_action "Creating SquashFS image, this may take some time..."
   
     if [[ "${VERBOSE}" = "yes" ]]; then
         mksquashfs "${WORK_DIR}/airootfs" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress &> /dev/null
@@ -142,30 +148,30 @@ _mkairootfs_sfs () {
 		mksquashfs "${WORK_DIR}/airootfs" "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}/airootfs.sfs" -noappend -comp "${SFS_COMP}" -no-progress
     fi
     
-    echo_valid " Done!"
+    out_valid "Done!"
 }
 
 _mkchecksum () {
-    echo_display " Creating checksum file for self-test..."
+    out_action "Creating checksum file for self-test..."
     cd "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
     md5sum airootfs.sfs > airootfs.md5
     cd ${OLDPWD}
-    echo_valid " Done!"
+    out_valid "Done!"
 }
 
 _mksignature () {
-    echo_display " Creating signature file..."
+    out_action "Creating signature file..."
     cd "${WORK_DIR}/iso/${INSTALL_DIR}/${ARCH}"
     gpg --detach-sign --default-key ${gpg_key} airootfs.sfs
     cd ${OLDPWD}
-    echo_valid " Done!"
+    out_valid "Done!"
 }
 
 command_pkglist () {
     pacman -Sl -r "${WORK_DIR}/airootfs" --config "${HOME_PATH}/pacman.conf" | \
         awk '/\[installed\]$/ {print $1 "/" $2 "-" $3}' > \
         "${WORK_DIR}/iso/${INSTALL_DIR}/pkglist.${ARCH}.txt"
-    echo_valid " Done!"
+    out_valid "Done!"
 
 }
 
@@ -189,7 +195,7 @@ command_iso () {
     fi
 
     mkdir -p ${OUT_DIR}
-    echo_display " Creating ISO image..."
+    out_action "Creating ISO image..."
     
     if [[ ${VERBOSE} == "yes" ]]; then
         _qflag="-quiet"
@@ -209,7 +215,7 @@ command_iso () {
         ${_iso_efi_boot_args} \
         -output "${OUT_DIR}/${img_name}" \
         "${WORK_DIR}/iso/"
-    echo_valid " Done! | $(ls -sh ${OUT_DIR}/${img_name})"
+    out_valid "Done! | $(ls -sh ${OUT_DIR}/${img_name})"
 }
 
 # create airootfs.sfs filesystem, and push it in "iso" directory.

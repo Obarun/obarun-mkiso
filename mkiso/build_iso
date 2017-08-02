@@ -1,4 +1,10 @@
 #!/usr/bin/bash
+#
+# Authors:
+# Eric Vidal <eric@obarun.org>
+#
+# Copyright (C) 2015-2017 Eric Vidal <eric@obarun.org>
+#
 ## This script was made for provide obarun environment. This scripts is under license BEER-WARE.
 # "THE BEER-WARE LICENSE" (Revision 42):
 # <eric@obarun.org> wrote this file.  As long as you retain this notice you
@@ -13,11 +19,11 @@ sourcing(){
 	
 	local list
 	
-	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{common_functions,mkiso_functions}; do
+	for list in /etc/obarun/mkiso.conf /usr/lib/obarun/{util.sh,mkiso_functions}; do
 		if [[ -f "${list}" ]]; then
 			source "${list}"
 		else
-			echo "==>> Missing file : ${list}"
+			out_error "Missing file : ${list}"
 			exit	
 		fi
 	done
@@ -40,7 +46,7 @@ fi
 
 make_rootfs() {
 	mkdir -p ${WORK_DIR}/airootfs
-	echo_display " Copy $NEWROOT to $WORK_DIR/airootfs, this may take some time..."
+	out_action "Copy $NEWROOT to $WORK_DIR/airootfs, this may take some time..."
 	# Can be fail here if old version of cp is used
 	# Old cp version doesn't create directories /dev/{pts,shm}
     cp -af ${NEWROOT}/* ${WORK_DIR}/airootfs
@@ -50,13 +56,13 @@ make_rootfs() {
 
 # Needed packages for x86_64 EFI boot
 make_extra_packages() {
-	echo_display " Install needed extra-packages"
+	out_action "Install needed extra-packages"
 	pacman -r "${WORK_DIR}/airootfs" -Sy efitools intel-ucode memtest86+ mkinitcpio-nfs-utils nbd --config "$PAC_CONF" --cachedir "$CACHE_DIR" --noconfirm 2>/dev/null || die " Failed to install extra-packages" "clean_install"
 }
 
 # Copy mkinitcpio archiso hooks and build initramfs (airootfs)
 make_setup_mkinitcpio() {
-    echo_display " Set hook for initcpio"
+    out_action "Set hook for initcpio"
     local _hook
   
     for _hook in archiso archiso_shutdown archiso_loop_mnt; do
@@ -69,7 +75,7 @@ make_setup_mkinitcpio() {
     cp /usr/lib/initcpio/archiso_shutdown ${WORK_DIR}/airootfs/etc/initcpio
     # verification si le fichier mkinitcpio exist ou pas
     cp ${HOME_PATH}/mkinitcpio.conf ${WORK_DIR}/airootfs/etc/mkinitcpio-archiso.conf
-    echo_display " Create an initial ramdisk environment"
+    out_action "Create an initial ramdisk environment"
     chroot ${WORK_DIR}/airootfs/ /usr/bin/mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux -g /boot/archiso.img
 
 }
@@ -77,7 +83,7 @@ make_setup_mkinitcpio() {
 
 # Prepare kernel/initramfs ${INSTALL_DIR}/boot/
 make_boot() {
-	echo_display " Prepare initial ramdisk boot"
+	out_action "Prepare initial ramdisk boot"
     mkdir -p ${WORK_DIR}/iso/${INSTALL_DIR}/boot/${ARCH}
     cp ${WORK_DIR}/airootfs/boot/archiso.img ${WORK_DIR}/iso/${INSTALL_DIR}/boot/${ARCH}/archiso.img
     cp ${WORK_DIR}/airootfs/boot/vmlinuz-linux ${WORK_DIR}/iso/${INSTALL_DIR}/boot/${ARCH}/vmlinuz
@@ -85,7 +91,7 @@ make_boot() {
 
 # Add other aditional/extra files to ${INSTALL_DIR}/boot/
 make_boot_extra() {
-	echo_display " Prepare extra-packages for boot"
+	out_action "Prepare extra-packages for boot"
 	#memtest doit etre installer intel-ucode aussi
     cp ${WORK_DIR}/airootfs/boot/memtest86+/memtest.bin ${WORK_DIR}/iso/${INSTALL_DIR}/boot/memtest
     cp ${WORK_DIR}/airootfs/usr/share/licenses/common/GPL2/license.txt ${WORK_DIR}/iso/${INSTALL_DIR}/boot/memtest.COPYING
@@ -95,7 +101,7 @@ make_boot_extra() {
 
 # Prepare /${INSTALL_DIR}/boot/syslinux
 make_syslinux() {
-	echo_display " Set syslinux"
+	out_action "Set syslinux"
 	# le fichier syslinux.cfg et splash.png doit etre cree sous le repertoire $wor_dir/syslinux
     mkdir -p ${WORK_DIR}/iso/${INSTALL_DIR}/boot/syslinux
     for _cfg in ${HOME_PATH}/syslinux/*.cfg; do
@@ -113,7 +119,7 @@ make_syslinux() {
 
 # Prepare /isolinux
 make_isolinux() {
-	echo_display " Set isolinux"
+	out_action "Set isolinux"
     mkdir -p ${WORK_DIR}/iso/isolinux
     sed "s|%INSTALL_DIR%|${INSTALL_DIR}|g" ${HOME_PATH}/isolinux/isolinux.cfg > ${WORK_DIR}/iso/isolinux/isolinux.cfg
     cp ${WORK_DIR}/airootfs/usr/lib/syslinux/bios/isolinux.bin ${WORK_DIR}/iso/isolinux/
@@ -122,7 +128,7 @@ make_isolinux() {
 }
 # Prepare /EFI
 make_efi() {
-	echo_display " Prepare efiboot"
+	out_action "Prepare efiboot"
     mkdir -p ${WORK_DIR}/iso/EFI/boot
     cp ${WORK_DIR}/airootfs/usr/share/efitools/efi/PreLoader.efi ${WORK_DIR}/iso/EFI/boot/bootx64.efi
     cp ${WORK_DIR}/airootfs/usr/share/efitools/efi/HashTool.efi ${WORK_DIR}/iso/EFI/boot/
@@ -145,10 +151,10 @@ make_efi() {
 }
 
 make_prepare() {
-	echo_display " Creating a list of installed packages on live-enviroment..."
+	out_action "Creating a list of installed packages on live-enviroment..."
     cp -a -l -f ${WORK_DIR}/airootfs ${WORK_DIR}
     ${MAKE_ISO} pkglist
-    echo_display " Prepare and compress airootfs"
+    out_action "Prepare and compress airootfs"
     ${MAKE_ISO} prepare #${gpg_key:+-g ${gpg_key}}
     #rm -rf ${WORK_DIR}/airootfs
     # rm -rf ${WORK_DIR}/${ARCH}/airootfs (if low space, this helps)
@@ -156,7 +162,7 @@ make_prepare() {
 
 # Prepare efiboot.img::/EFI for "El Torito" EFI boot mode
 make_efiboot() {
-	echo_display " Set efiboot"
+	out_action "Set efiboot"
     mkdir -p ${WORK_DIR}/iso/EFI/archiso
     truncate -s 40M ${WORK_DIR}/iso/EFI/archiso/efiboot.img
     mkfs.vfat -n OBARUN_EFI ${WORK_DIR}/iso/EFI/archiso/efiboot.img
@@ -192,7 +198,7 @@ make_efiboot() {
 }
 # Build ISO
 make_iso() {
-	echo_display " Build the iso"
+	out_action "Build the iso"
     ${MAKE_ISO} iso "${ISO_NAME}_x86_64-${ISO_VERSION}.iso"
 }
 
@@ -243,4 +249,4 @@ run_once make_efiboot
 run_once make_prepare
 run_once make_iso
 
-echo_valid " Iso builded successfully"
+out_valid "Iso builded successfully"

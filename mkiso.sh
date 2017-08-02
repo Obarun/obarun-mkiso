@@ -16,8 +16,8 @@
 ## 		Some global variables needed
 
 HOME_PATH="/var/lib/obarun/obarun-mkiso"
-MAKE_ISO="/usr/lib/obarun/make_iso"
-BUILD_ISO="/usr/lib/obarun/build_iso"
+MAKE_ISO="/usr/lib/obarun/mkiso/make_iso"
+BUILD_ISO="/usr/lib/obarun/mkiso/build_iso"
 WORK_DIR="${HOME_PATH}/work"
 ARCH=$(uname -m)
 PKG_LIST=""
