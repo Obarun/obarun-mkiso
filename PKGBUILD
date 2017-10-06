@@ -1,3 +1,12 @@
+# Copyright (c) 2015-2017 Eric Vidal <eric@obarun.org>
+# All rights reserved.
+# 
+# This file is part of Obarun. It is subject to the license terms in
+# the LICENSE file found in the top-level directory of this
+# distribution and at https://github.com/Obarun/obarun-mkiso/LICENSE
+# This file may not be copied, modified, propagated, or distributed
+# except according to the terms contained in the LICENSE file.
+#
 # Maintainer: Obarun-mkiso scripts <eric@obarun.org>
 # DO NOT EDIT this PKGBUILD if you don't know what you do
 
@@ -7,42 +16,21 @@ pkgrel=1
 pkgdesc=" Script for making an iso"
 arch=(x86_64)
 url="file:///var/lib/obarun/$pkgname/update_package/$pkgname"
-license=('BEERWARE')
+license=(ISC)
 depends=('git' 'pacman' 'obarun-libs' 'squashfs-tools' 'libisoburn' 'gzip' 'archiso' 'syslinux')
 backup=('etc/obarun/mkiso.conf')
-install=
 source=("$pkgname::git+file:///var/lib/obarun/$pkgname/update_package/$pkgname")
 md5sums=('SKIP')
 validpgpkeys=('6DD4217456569BA711566AC7F06E8FDE7B45DAAC') # Eric Vidal
 
 pkgver() {
 	cd "${pkgname}"
-	if git_version=$(git rev-parse --short HEAD); then
-		read "$rev-parse" <<< "$git_version"
-		printf '%s' "$git_version"
-	fi
+	
+	git describe --tags | sed -e 's:-:+:g;s:^v::'
 }
 
 package() {
-	cd "$srcdir/$pkgname"
+	cd "${pkgname}"
 
-	install -Dm 0755 "obarun-mkiso.in" "$pkgdir/usr/bin/obarun-mkiso"
-	install -Dm 0755 "mkiso.sh" "$pkgdir/usr/lib/obarun/mkiso.sh"
-	install -dm 0755 "$pkgdir/usr/lib/obarun/mkiso/"
-	install -Dm 0755 "mkiso/build.sh" "$pkgdir/usr/lib/obarun/mkiso/build.sh"
-	install -Dm 0755 "mkiso/make.sh" "$pkgdir/usr/lib/obarun/mkiso/make.sh"
-	install -Dm 0644 "mkiso.conf" "$pkgdir/etc/obarun/mkiso.conf"
-	install -dm 0755 "$pkgdir/usr/share/licenses/obarun-mkiso/"
-	install -Dm 0644 "LICENSE" "$pkgdir/usr/share/licenses/obarun-mkiso/LICENSE"
-	install -Dm 0644 "PKGBUILD" "$pkgdir/var/lib/obarun/obarun-mkiso/update_package/PKGBUILD"
-	
-	install -dm 0755 "$pkgdir/var/lib/obarun/obarun-mkiso"
-	install -Dm 0644 "mkinitcpio.conf" "$pkgdir/var/lib/obarun/obarun-mkiso/mkinitcpio.conf"
-	install -Dm 0644 "pacman.conf" "$pkgdir/var/lib/obarun/obarun-mkiso/pacman.conf"
-	
-	for d in efiboot isolinux syslinux; do
-		cp -aT "${d}" "$pkgdir/var/lib/obarun/obarun-mkiso/${d}"
-	done	
-
+	make DESTDIR="$pkgdir" install
 }
-

@@ -1,16 +1,13 @@
-#!/usr/bin/bash
+#!@BINDIR@/bash
+# Copyright (c) 2015-2017 Eric Vidal <eric@obarun.org>
+# All rights reserved.
+# 
+# This file is part of Obarun. It is subject to the license terms in
+# the LICENSE file found in the top-level directory of this
+# distribution and at https://github.com/Obarun/obarun-mkiso/LICENSE
+# This file may not be copied, modified, propagated, or distributed
+# except according to the terms contained in the LICENSE file.
 #
-# Authors:
-# Eric Vidal <eric@obarun.org>
-#
-# Copyright (C) 2015-2017 Eric Vidal <eric@obarun.org>
-#
-## This script is under license BEER-WARE.
-# "THE BEER-WARE LICENSE" (Revision 42):
-# <eric@obarun.org> wrote this file.  As long as you retain this notice you
-# can do whatever you want with this stuff. If we meet some day, and you think
-# this stuff is worth it, you can buy me a beer in return.   Eric Vidal
-
 # functions file for obarun-mkiso package
 
 ## 		Some global variables needed
