@@ -30,8 +30,8 @@ install:
 	install -Dm644 mkinitcpio.conf $(DESTDIR)/var/lib/obarun/obarun-mkiso/mkinitcpio.conf
 	install -Dm644 pacman.conf $(DESTDIR)/var/lib/obarun/obarun-mkiso/pacman.conf
 	
-	for i in $(EXTRA); do
-		cp -aT $$i $(DESTDIR)/var/lib/obarun/obarun-mkiso/$$i
+	for i in $(EXTRA); do \
+		cp -aT $$i $(DESTDIR)/var/lib/obarun/obarun-mkiso/$$i; \
 	done
 	
 	install -Dm644 PKGBUILD $(DESTDIR)/var/lib/obarun/obarun-mkiso/update_package/PKGBUILD
