@@ -152,7 +152,11 @@ choose_rootdir(){
 		out_notvalid "This is not a valide mountpoint, please retry :"
 		read -e _directory
 	done
-
+	if [[ "${_directory}" == "/" ]];then
+		out_notvalid "Taking / as directory is not allowed"
+		out_notvalid "Keeping the old value"
+		return
+	fi
 	out_valid "Your root directory for installation is now : $_directory"
 	#NEWROOT="${_directory}"
 	sed -i "s,NEWROOT=.*$,NEWROOT=\"${_directory}\",g" /etc/obarun/mkiso.conf
